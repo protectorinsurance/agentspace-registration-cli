@@ -112,6 +112,17 @@ flags.DEFINE_string(
 # Authorization flags
 flags.DEFINE_list("auth_ids", [], "Optional: The IDs of the authorization resources.")
 
+# Sharing configuration flags (Preview feature)
+flags.DEFINE_enum(
+    "sharing_scope",
+    None,
+    ["ALL_USERS", "RESTRICTED"],
+    "[PREVIEW] Agent sharing scope. "
+    "'ALL_USERS' makes the agent available to all users in the organization. "
+    "'RESTRICTED' limits access (user/group specification not yet available in API). "
+    "This feature is in Preview and may change.",
+)
+
 # Output format flag
 flags.DEFINE_bool(
     "json",
@@ -443,6 +454,10 @@ async def register_agent():
                     "Warning: A2A agents support only one authorization resource. Using the first one."
                 )
 
+    # Add sharing config if specified (Preview feature)
+    if FLAGS.sharing_scope:
+        data["sharingConfig"] = {"scope": FLAGS.sharing_scope}
+
     async with httpx.AsyncClient() as client:
         try:
             response = await client.post(url, headers=headers, json=data, timeout=30.0)
@@ -616,6 +631,10 @@ async def update_agent():
                 print(
                     "Warning: A2A agents support only one authorization resource. Using the first one."
                 )
+
+    # Add sharing config if specified (Preview feature)
+    if FLAGS.sharing_scope:
+        data["sharingConfig"] = {"scope": FLAGS.sharing_scope}
 
     async with httpx.AsyncClient() as client:
         try:
